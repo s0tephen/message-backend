@@ -1,0 +1,10 @@
+{
+  "port": 1818,
+  "mysql": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "password": "11223344",
+    "user": "root",
+    "db": "message"
+  }
+}
