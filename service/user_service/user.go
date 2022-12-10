@@ -14,49 +14,36 @@ type Message struct {
 	CreateAt time.Time `json:"create_at"`
 }
 
-func SendMessage(ctx *gin.Context) {
-	db := mysql.DB.GetDb()
-	message := new(Message)
-	err := ctx.ShouldBind(message)
-	if err != nil {
-		ctx.JSON(200, gin.H{
-			"code":    1,
-			"message": err.Error(),
-		})
-	}
-	message.CreateAt = time.Now()
-	db.Create(message)
-	ctx.JSON(200, gin.H{
-		"code": message,
-		"msg":  "success",
-	})
-
-}
-
 func ShowMessage(ctx *gin.Context) {
 	db := mysql.DB.GetDb()
 
 	var message []Message
 	var total int64
-	//String转int
-	pageSize, _ := strconv.Atoi(ctx.Query("pageSize"))
 	pageNum, _ := strconv.Atoi(ctx.Query("pageNum"))
 	//判断会否需要分页
-	offsetVal := (pageNum + 1) * pageSize
-	if pageNum == 0 && pageSize == 0 {
-		offsetVal = -1
+	if pageNum == 0 {
+		pageNum = 1
 	}
-	db.Model(message).Count(&total).Limit(pageSize).Offset(offsetVal).Order("create_at desc").Find(&message)
+	pageSize, _ := strconv.Atoi(ctx.Query("pageSize"))
+	switch {
+	case pageSize > 100:
+		pageSize = 100
+	case pageSize <= 0:
+		pageSize = 10
+	}
+	offset := (pageNum - 1) * pageSize
+
+	db.Model(message).Count(&total).Limit(pageSize).Offset(offset).Order("create_at desc").Find(&message)
 	if len(message) == 0 {
 		ctx.JSON(200, gin.H{
 			"msg":  "没有数据",
-			"code": 400,
+			"code": -1,
 			"data": gin.H{},
 		})
 	} else {
 		ctx.JSON(200, gin.H{
 			"msg":  "查询成功",
-			"code": 200,
+			"code": 1,
 			"data": gin.H{
 				"list":     message,
 				"total":    total,
@@ -74,7 +61,34 @@ func DetectMessage(ctx *gin.Context) {
 	db.Find(&message)
 	db.Delete(&Message{}, id)
 	ctx.JSON(200, gin.H{
-		"msg":  "删除成功",
-		"code": 200,
+		"msg":  "success",
+		"code": -1,
 	})
+}
+
+func SendMessageAndUpdate(ctx *gin.Context) {
+	db := mysql.DB.GetDb()
+
+	var message Message
+	err := ctx.ShouldBindJSON(&message)
+	if err != nil {
+		ctx.JSON(500, gin.H{
+			"code": -1,
+			"msg":  "传入的json格式错误",
+		})
+	}
+	if message.ID == 0 {
+		message.CreateAt = time.Now()
+		db.Create(&message)
+		ctx.JSON(200, gin.H{
+			"msg":  "留言成功",
+			"code": 1,
+		})
+	} else {
+		db.Model(&message).Where("id = ?", message.ID).Updates(map[string]interface{}{"name": message.Name, "content": message.Content})
+		ctx.JSON(200, gin.H{
+			"msg":  "修改成功",
+			"code": 1,
+		})
+	}
 }
