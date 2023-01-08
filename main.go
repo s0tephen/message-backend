@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -26,6 +28,11 @@ func main() {
 	}
 	//初始化gin
 	g := gin.Default()
+
+	base, _ := os.Getwd()
+	// 网站favicon
+	g.StaticFile("/favicon.ico", filepath.Join(base, "static", "favicon.ico"))
+
 	g.Use(Cors())
 	router.Register(g)
 	err = g.Run(fmt.Sprintf(":%d", config.Config.Port))

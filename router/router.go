@@ -13,4 +13,7 @@ func Register(g *gin.Engine) {
 		user.POST("/detectMessage", user_service.DetectMessage)
 		user.POST("/sendMessageAndUpdate", user_service.SendMessageAndUpdate)
 	}
+	//base, _ := os.Getwd()
+	//// 网站favicon
+	//g.StaticFile("/favicon.ico", filepath.Join(base, "static", "favicon.ico"))
 }

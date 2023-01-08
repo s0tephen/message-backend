@@ -31,6 +31,7 @@ func ShowMessage(ctx *gin.Context) {
 	case pageSize <= 0:
 		pageSize = 10
 	}
+	//页-1*每页大小
 	offset := (pageNum - 1) * pageSize
 
 	db.Model(message).Count(&total).Limit(pageSize).Offset(offset).Order("create_at desc").Find(&message)
@@ -62,7 +63,7 @@ func DetectMessage(ctx *gin.Context) {
 	db.Delete(&Message{}, id)
 	ctx.JSON(200, gin.H{
 		"msg":  "success",
-		"code": -1,
+		"code": 1,
 	})
 }
 
